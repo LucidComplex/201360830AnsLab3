@@ -29,8 +29,8 @@ public class Plotter {
             double[] yData = new double[xData.length];
             for (int i = 0; i < yData.length; i++) {
                 float sum = 0;
-                for (int ii = i + min; ii < i + windowLength; ii++) {
-                    sum += scale.getWeight(proteinSequence.charAt(ii - min));
+                for (int j = (int) (xData[i] - min); j <= xData[i] + min; j++) {
+                    sum += scale.getWeight(proteinSequence.charAt(j));
                 }
                 yData[i] = sum / windowLength;
             }
@@ -65,7 +65,7 @@ public class Plotter {
         max += 0.5d;
         double[] y = new double[] {max, max};
         for (int i = 0; i < yData.length; i++) {
-            if (yData[i] >= threshold) {
+            if (yData[i] > threshold) {
                 if (count == 0) {
                     a = i;
                 }
