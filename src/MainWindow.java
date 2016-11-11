@@ -62,7 +62,11 @@ public class MainWindow {
                 int windowLength = (int) slidingWindowComboBox.getSelectedItem();
                 Scale scale = (Scale) hydrophobicityComboBox.getSelectedItem();
                 double threshold = (double) averageThresholdSpinner.getValue();
-                Plotter.plot(sequences, windowLength, scale, threshold);
+                try {
+                    Plotter.plot(sequences, windowLength, scale, threshold);
+                } catch (Throwable throwable) {
+                    Error.showError(throwable.getMessage());
+                }
             }
         });
     }

@@ -10,9 +10,11 @@ public class Scale {
         fillWeights();
     }
 
-    public float getWeight(char protein) {
+    public float getWeight(char protein) throws Throwable {
         int offset = 0;
-        if (protein >= 'C' && protein <= 'I') {
+        if (protein == 'A') {
+            offset = 0;
+        } else if (protein >= 'C' && protein <= 'I') {
             offset = 1;
         } else if (protein >= 'K' && protein <= 'N') {
             offset = 2;
@@ -22,6 +24,8 @@ public class Scale {
             offset = 4;
         } else if (protein == 'Y') {
             offset = 5;
+        } else {
+            throw new Throwable("Invalid protein sequence.");
         }
         return weights[protein - 'A' - offset];
     }

@@ -4,7 +4,6 @@ import java.awt.event.*;
 public class Error extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
-    private JButton buttonCancel;
     private JLabel message;
 
     public Error() {
@@ -15,12 +14,6 @@ public class Error extends JDialog {
         buttonOK.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 onOK();
-            }
-        });
-
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
             }
         });
 

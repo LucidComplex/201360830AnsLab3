@@ -1,9 +1,15 @@
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYSeries;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 import java.util.List;
 
 public class Chart extends JDialog {
@@ -12,7 +18,9 @@ public class Chart extends JDialog {
     private JButton buttonCancel;
     private JScrollPane chartScrollPane;
     private JButton saveAsJPEGButton;
+    private JButton exportButton;
     private JPanel panel;
+    private List<TrendList> trends;
 
     public Chart() {
         setContentPane(contentPane);
@@ -51,6 +59,46 @@ public class Chart extends JDialog {
                 ImageSaver.saveComponentToImage(chartScrollPane.getViewport().getComponent(0));
             }
         });
+        exportButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                JFileChooser fc = new JFileChooser() {
+                    @Override
+                    public void approveSelection() {
+                        File f = getSelectedFile();
+                        if (f.exists() && getDialogType() == SAVE_DIALOG) {
+                            int result = JOptionPane.showConfirmDialog(this, "The file exists, overwrite?", "Existing file", JOptionPane.YES_NO_CANCEL_OPTION);
+                            switch (result) {
+                                case JOptionPane.YES_OPTION:
+                                    super.approveSelection();
+                                    return;
+                                case JOptionPane.CANCEL_OPTION:
+                                    cancelSelection();
+                                case JOptionPane.NO_OPTION:
+                                case JOptionPane.CLOSED_OPTION:
+                                    return;
+                            }
+                        }
+                        super.approveSelection();
+                    }
+                };
+                fc.showSaveDialog(null);
+                try {
+                    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fc.getSelectedFile()));
+                    for (TrendList list : trends) {
+                        bufferedWriter.write(list.name + "\t");
+                        bufferedWriter.write(String.valueOf(list.list.size()));
+                        for (Trend trend : list.list) {
+                            bufferedWriter.write("\t" + trend.start + "-" + trend.end);
+                        }
+                        bufferedWriter.write("\n");
+                    }
+                    bufferedWriter.close();
+                } catch (IOException e) {
+                    Error.showError(e.getMessage());
+                }
+            }
+        });
     }
 
     private void onOK() {
@@ -63,8 +111,9 @@ public class Chart extends JDialog {
         dispose();
     }
 
-    public static void showChart(List<XYChart> charts) {
+    public static void showChart(List<XYChart> charts, List<TrendList> trendsList) {
         Chart dialog = new Chart();
+        dialog.trends = trendsList;
         Container container = new Container();
         container.setLayout(new GridLayout(charts.size(), 1));
         for (XYChart chart : charts) {

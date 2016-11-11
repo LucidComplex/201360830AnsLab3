@@ -2,22 +2,20 @@ import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 
-import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.DoubleSummaryStatistics;
 import java.util.List;
 
 /**
  * Created by tan on 11/1/16.
  */
 public class Plotter {
-    public static void plot(List<Sequence> sequences, int windowLength, Scale scale, double threshold) {
+    public static void plot(List<Sequence> sequences, int windowLength, Scale scale, double threshold) throws Throwable {
         XYChartBuilder builder = new XYChartBuilder();
         builder.yAxisTitle("Average Hydrophobicity");
         builder.xAxisTitle("Index Position");
         int min = windowLength / 2;
         List<XYChart> charts = new ArrayList<>();
+        List<TrendList> trendsList = new ArrayList<>();
         for (Sequence sequence : sequences) {
             String proteinSequence = sequence.getSequence().toUpperCase();
             builder.title(sequence.getName());
@@ -35,7 +33,7 @@ public class Plotter {
                 yData[i] = sum / windowLength;
             }
             chart.addSeries(sequence.getName(), xData, yData);
-            markTrends(chart, xData, yData, windowLength, threshold);
+            trendsList.add(markTrends(chart, xData, yData, windowLength, threshold));
 
             // plot threshold line
             xData = new double[2];
@@ -46,13 +44,13 @@ public class Plotter {
             yData[1] = threshold;
             chart.addSeries("Threshold", xData, yData);
             charts.add(chart);
-
-
         }
-        Chart.showChart(charts);
+        Chart.showChart(charts, trendsList);
     }
 
-    private static void markTrends(XYChart chart, double[] xData, double[] yData, int windowLength, double threshold) {
+    private static TrendList markTrends(XYChart chart, double[] xData, double[] yData, int windowLength, double threshold) {
+        TrendList trends = new TrendList();
+        trends.name = chart.getTitle();
         int count = 0;
         int trendCount = 0;
         int a = 0;
@@ -73,7 +71,8 @@ public class Plotter {
             } else {
                 if (count >= windowLength) {
                     double[] x = new double[] {xData[a], xData[i - 1]};
-                    chart.addSeries("Trend #" + ++trendCount, x, y);
+                    chart.addSeries("Trend #" + ++trendCount + " (" + ((int) xData[a] + 1) + " - " + ((int) xData[i - 1] + 1) + ")", x, y);
+                    trends.list.add(new Trend(((int) xData[a] + 1), ((int) xData[i - 1] + 1)));
                 }
                 count = 0;
             }
@@ -81,8 +80,10 @@ public class Plotter {
         if (count > 0) {
             if (count >= windowLength) {
                 double[] x = new double[]{xData[a], xData[yData.length - 1]};
-                chart.addSeries("Trend #" + ++trendCount, x, y);
+                chart.addSeries("Trend #" + ++trendCount + " (" + ((int) xData[a] + 1) + " - " + ((int) xData[yData.length - 1] + 1) + ")", x, y);
+                trends.list.add(new Trend(((int) xData[a] + 1), ((int) xData[yData.length - 1] + 1)));
             }
         }
+        return trends;
     }
 }
