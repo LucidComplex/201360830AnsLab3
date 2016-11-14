@@ -4,18 +4,20 @@ import org.knowm.xchart.XYChartBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * Created by tan on 11/1/16.
  */
 public class Plotter {
-    public static void plot(List<Sequence> sequences, int windowLength, Scale scale, double threshold) throws Throwable {
+    public static void plot(List<Sequence> sequences, int windowLength, Scale scale, double threshold) throws InvalidProteinSequences {
         XYChartBuilder builder = new XYChartBuilder();
         builder.yAxisTitle("Average Hydrophobicity");
         builder.xAxisTitle("Index Position");
         int min = windowLength / 2;
         List<XYChart> charts = new ArrayList<>();
         List<TrendList> trendsList = new ArrayList<>();
+        InvalidProteinSequences throwable = new InvalidProteinSequences();
         for (Sequence sequence : sequences) {
             String proteinSequence = sequence.getSequence().toUpperCase();
             builder.title(sequence.getName());
@@ -24,13 +26,27 @@ public class Plotter {
             for (int i = 0, ii = min; i < xData.length; i++, ii++) { // range(min, sequence - min + 1)
                 xData[i] = ii;
             }
+            boolean error = false;
             double[] yData = new double[xData.length];
             for (int i = 0; i < yData.length; i++) {
                 float sum = 0;
+                error = false;
                 for (int j = (int) (xData[i] - min); j <= xData[i] + min; j++) {
-                    sum += scale.getWeight(proteinSequence.charAt(j));
+                    try {
+                        sum += scale.getWeight(proteinSequence.charAt(j));
+                    } catch (Throwable t) {
+                        error = true;
+                        throwable.add(sequence.getName());
+                        break;
+                    }
+                }
+                if (error) {
+                    break;
                 }
                 yData[i] = sum / windowLength;
+            }
+            if (error) {
+                continue;
             }
             chart.addSeries(sequence.getName(), xData, yData);
             trendsList.add(markTrends(chart, xData, yData, windowLength, threshold));
@@ -44,6 +60,9 @@ public class Plotter {
             yData[1] = threshold;
             chart.addSeries("Threshold", xData, yData);
             charts.add(chart);
+        }
+        if (throwable.size() != 0) {
+            throw throwable;
         }
         Chart.showChart(charts, trendsList);
     }
@@ -85,5 +104,24 @@ public class Plotter {
             }
         }
         return trends;
+    }
+}
+
+class InvalidProteinSequences extends Throwable {
+    private List<String> proteinSequences;
+    public InvalidProteinSequences() {
+        proteinSequences = new ArrayList<>();
+    }
+
+    public void add(String seq) {
+        proteinSequences.add(seq);
+    }
+
+    public List<String> getList() {
+        return proteinSequences;
+    }
+
+    public int size() {
+        return proteinSequences.size();
     }
 }

@@ -64,8 +64,27 @@ public class MainWindow {
                 double threshold = (double) averageThresholdSpinner.getValue();
                 try {
                     Plotter.plot(sequences, windowLength, scale, threshold);
-                } catch (Throwable throwable) {
-                    Error.showError(throwable.getMessage());
+                } catch (InvalidProteinSequences throwable) {
+                    String message = "";
+                    List<String> invalid = throwable.getList();
+                    for (String m : invalid) {
+                        message += m + " is not a valid protein sequence.\n";
+                        for (int i = 0; i < sequences.size(); i++) {
+                            Sequence s = sequences.get(i);
+                            if (m == s.getName()) {
+                                sequences.remove(i);
+                                break;
+                            }
+                        }
+                    }
+                    Error.showError(message);
+                    try {
+                        if (sequences.size() > 0) {
+                            Plotter.plot(sequences, windowLength, scale, threshold);
+                        }
+                    } catch (InvalidProteinSequences e) {
+
+                    }
                 }
             }
         });
