@@ -71,7 +71,7 @@ public class MainWindow {
                         message += m + " is not a valid protein sequence.\n";
                         for (int i = 0; i < sequences.size(); i++) {
                             Sequence s = sequences.get(i);
-                            if (m == s.getName()) {
+                            if (m.equals(s.getName())) {
                                 sequences.remove(i);
                                 break;
                             }
